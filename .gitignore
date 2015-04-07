@@ -1,0 +1,4 @@
+*.pyc
+.energy.log.tmp
+.cpu.log.tmp
+cpumonitor.pid
