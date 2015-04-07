@@ -1,4 +1,5 @@
 from mdb import *
+import time
 
 # Main measurement control loop
 #
@@ -10,7 +11,7 @@ from mdb import *
 # mControl input:
 # - seriesNames: list of seriesNames
 # - mfun: measurement function that takes a (seriesName, configurationId) and returns a map with measurement results
-def mControl(seriesNames, mfun, delay):
+def mControl(seriesNames, mfun):
 	assertSeries(seriesNames)
 	currentSeriesIdx = 0
 	currentSeries = seriesNames[currentSeriesIdx]
@@ -49,8 +50,13 @@ def mControl(seriesNames, mfun, delay):
 			totalCount += 1	
 			totalTime += (t2-t1)
 			remainingTime = (totalTime/totalCount)*countRemainingMeasurements(seriesNames)
-			print("#analysis time: "+str(t2-t1)+"s, estimated remaining: "+(remainingTime/60/60)+"h")
+			print("#analysis time: "+format(t2-t1,".2f")+"s, estimated remaining: "+formatTime(remainingTime))
 
+def formatTime(t):
+	d,r=divmod(t,60*60*24)
+	h,r=divmod(r,60*60)
+	m,r=divmod(r,60)
+	return "{0}d {1}h {2}m".format(int(d),int(h),int(m))
 
 def assertSeries(seriesNames):
 	#check that series exist

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import MySQLdb
 import ConfigParser
+import sys
 
 configParser = ConfigParser.RawConfigParser()   
 configFilePath = r'.dbconfig'
@@ -41,12 +42,13 @@ def getNFPId(nfp):
 		cur.execute('select ID from NFP where name="'+nfp+'"')
 		r=cur.fetchone()
 		if r==None:
+			print "creating new NFP: "+nfp
 			cur.execute('insert into NFP (Name) values ("'+nfp+'")')
 			cur.execute('select ID from NFP where name="'+nfp+'"')
-			cur.commit()
+			db.commit()
 			r=cur.fetchone()
-		nfpIdCache[seriesname]=r[0]
-	return nfpIdCache[seriesname]
+		nfpIdCache[nfp]=r[0]
+	return nfpIdCache[nfp]
 
 
 
@@ -54,10 +56,10 @@ def getNFPId(nfp):
 #resultmap is a map from NFP-names to string values representing results
 def storeMeasurements(seriesName, configId, resultMap):
 	global cur
-	assert resultMap.size()>0
+	assert len(resultMap)>0
 	sql = 'insert into MResults (ConfigurationID, SeriesID, NFPID, Value) values '
-	for k, v in resultMap:
-		sql += '({0}, {1}, {2}, "{3}"), '.format(configId, getSeriesId(seriesName), getNFPId(k), v)
+	for k in resultMap:
+		sql += '({0}, {1}, {2}, "{3}"), '.format(configId, getSeriesId(seriesName), getNFPId(k), resultMap[k])
 	cur.execute(sql[:-2])
 	db.commit()
 
@@ -81,8 +83,8 @@ def claimNextMeasurement(seriesName):
 
 def countRemainingMeasurements(seriesNames):
 	return execSqlOne("select count(*) from Todos, Series where "+
-		" or ".join(map((lambda x: '(Series.Name="'+x+')'),seriesNames)))
+		" or ".join(map((lambda x: '(Series.Name="'+x+'")'),seriesNames)))
 
 
 def getConfigParams(configId):
-	return execSqlOne("select CompilerOptions from Configurations where ID="+configId)	
+	return execSqlOne("select CompilerOptions from Configurations where ID="+str(configId))	
